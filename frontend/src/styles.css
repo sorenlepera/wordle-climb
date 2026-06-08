@@ -1,0 +1,9 @@
+/* Global Reset */
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: #0b0f19; /* Match our dark app background */
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}

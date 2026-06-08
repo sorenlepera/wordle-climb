@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wordle_app
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=jdbc:postgresql://db:5432/wordledb
+      - DATABASE_USER=wordle_user
+      - DATABASE_PASSWORD=supersecret
+      - GROQ_API_KEY=${GROQ_API_KEY} # Needs to be provided when running
+      # Generating a random secure key on the fly is hard in simple compose,
+      # For production, these should point to volume-mounted PEM files.
+      - JWT_PRIVATE_KEY_PATH=/work/keys/privateKey.pem
+      - JWT_PUBLIC_KEY_PATH=/work/keys/publicKey.pem
+    volumes:
+      - ./backend/src/main/resources/privateKey.pem:/work/keys/privateKey.pem:ro
+      - ./backend/src/main/resources/publicKey.pem:/work/keys/publicKey.pem:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - wordle_network
+
+  db:
+    image: postgres:15-alpine
+    container_name: wordle_db
+    environment:
+      - POSTGRES_DB=wordledb
+      - POSTGRES_USER=wordle_user
+      - POSTGRES_PASSWORD=supersecret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wordle_user -d wordledb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wordle_network
+
+networks:
+  wordle_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
