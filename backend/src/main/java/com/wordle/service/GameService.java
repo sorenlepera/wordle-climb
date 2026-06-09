@@ -142,17 +142,11 @@ public class GameService {
     }
 
     public List<LeaderboardEntry> getLeaderboard() {
-        List<Object[]> results = PlayerProfile.getEntityManager()
-            .createQuery("SELECT MAX(p.username), MAX(p.highScore), MAX(p.maxScore) FROM PlayerProfile p GROUP BY LOWER(p.username) ORDER BY MAX(p.maxScore) DESC", Object[].class)
-            .setMaxResults(10)
-            .getResultList();
-
-        return results.stream()
-            .map(row -> new LeaderboardEntry(
-                (String) row[0],
-                row[1] == null ? 0 : ((Number) row[1]).intValue(),
-                row[2] == null ? 0 : ((Number) row[2]).intValue()
-            ))
+        return PlayerProfile.find("order by maxScore desc")
+            .page(Page.ofSize(10))
+            .<PlayerProfile>list()
+            .stream()
+            .map(p -> new LeaderboardEntry(p.username, p.highScore, p.maxScore))
             .collect(Collectors.toList());
     }
 

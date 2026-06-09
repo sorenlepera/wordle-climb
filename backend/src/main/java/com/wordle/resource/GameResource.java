@@ -37,7 +37,7 @@ public class GameResource {
                 .build();
         }
 
-        username = username.trim().toUpperCase();
+        username = username.trim().toLowerCase();
         return Response.ok(gameService.startGame(username)).build();
     }
 
@@ -49,7 +49,7 @@ public class GameResource {
         if (username == null) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
-        username = username.trim().toUpperCase();
+        username = username.trim().toLowerCase();
 
         try {
             return Response.ok(gameService.submitGuess(username, request.word().trim().toUpperCase())).build();
@@ -83,7 +83,7 @@ public class GameResource {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
         
-        username = username.trim().toUpperCase();
+        username = username.trim().toLowerCase();
         try {
             return Response.ok(gameService.nextLevel(username)).build();
         } catch (IllegalArgumentException e) {

@@ -30,12 +30,13 @@ public class AuthResource {
         if (request.username == null || request.password == null || request.username.trim().isEmpty() || request.password.trim().isEmpty()) {
             return Response.status(400).entity("{\"error\":\"Invalid input\"}").build();
         }
-        if (User.findByUsername(request.username) != null) {
+        String lowerUsername = request.username.trim().toLowerCase();
+        if (User.findByUsername(lowerUsername) != null) {
             return Response.status(409).entity("{\"error\":\"Ce pseudo existe déjà\"}").build();
         }
         
         User user = new User();
-        user.username = request.username.trim();
+        user.username = lowerUsername;
         user.passwordHash = BcryptUtil.bcryptHash(request.password);
         user.persist();
 
@@ -55,7 +56,8 @@ public class AuthResource {
     @POST
     @Path("/login")
     public Response login(AuthRequest request) {
-        User user = User.findByUsername(request.username);
+        String lowerUsername = request.username.trim().toLowerCase();
+        User user = User.findByUsername(lowerUsername);
         if (user == null || !BcryptUtil.matches(request.password, user.passwordHash)) {
             return Response.status(401).entity("{\"error\":\"Identifiants incorrects\"}").build();
         }
