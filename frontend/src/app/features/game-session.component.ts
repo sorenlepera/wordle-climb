@@ -52,7 +52,7 @@ import { GameStateService } from '../core/services/game-state.service';
             <div class="victory-overlay">
               <div class="victory-container modal-slide">
                 <div class="victory-emoji">🎉</div>
-                <h2>NIVEAU RÉUSSI !</h2>
+                <h2>NIVEAU RÉUSSI&nbsp;!</h2>
                 <p class="victory-text">
                   Vous avez trouvé le mot du niveau <strong>{{ gameStateService.lastLevelWord() }}</strong> !
                 </p>
@@ -295,6 +295,15 @@ export class GameSessionComponent {
 
   @HostListener('window:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent) {
+    const key = event.key.toUpperCase();
+
+    if (this.gameStateService.gameState()?.status === 'WON' && this.gameStateService.showVictory()) {
+      if (key === 'ENTER') {
+        this.gameStateService.proceedToNextLevel();
+      }
+      return;
+    }
+
     if (!this.gameStateService.gameState() || this.gameStateService.gameState()?.status !== 'IN_PROGRESS' || this.gameStateService.revealingRowIndex() !== -1 || this.gameStateService.isGuessSubmitting()) {
       return;
     }
