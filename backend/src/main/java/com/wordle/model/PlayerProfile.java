@@ -30,6 +30,7 @@ public class PlayerProfile extends PanacheEntity {
      * In Panache, the first parameter is the field name, and the second is the value.
      */
     public static PlayerProfile findByUsername(String username) {
-        return find("username", username).firstResult();
+        if (username == null) return null;
+        return find("LOWER(username)", username.toLowerCase()).firstResult();
     }
 }

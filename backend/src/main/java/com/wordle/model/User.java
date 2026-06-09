@@ -23,6 +23,7 @@ public class User extends PanacheEntity {
     public PlayerProfile profile;
 
     public static User findByUsername(String username) {
-        return find("username", username).firstResult();
+        if (username == null) return null;
+        return find("LOWER(username)", username.toLowerCase()).firstResult();
     }
 }
