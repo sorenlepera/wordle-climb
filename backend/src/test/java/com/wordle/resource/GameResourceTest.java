@@ -10,6 +10,9 @@ import org.mockito.Mockito;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import io.quarkus.test.security.TestSecurity;
+import io.quarkus.test.security.jwt.Claim;
+import io.quarkus.test.security.jwt.JwtSecurity;
 
 @QuarkusTest
 public class GameResourceTest {
@@ -30,13 +33,16 @@ public class GameResourceTest {
     }
 
     @Test
+    @TestSecurity(user = "TESTUSER", roles = "user")
+    @JwtSecurity(claims = {
+        @Claim(key = "upn", value = "TESTUSER")
+    })
     public void testStartGameSuccess() {
         // Mock the word generation for a new game
         Mockito.when(wordGeneratorAIMock.generateNextWord(1, "START")).thenReturn("TESTS");
 
         given()
           .contentType(ContentType.JSON)
-          .body("{\"username\":\"TESTUSER\"}")
           .when().post("/api/game/start")
           .then()
              .statusCode(200)
@@ -46,13 +52,12 @@ public class GameResourceTest {
     }
 
     @Test
-    public void testStartGameMissingUsername() {
+    public void testStartGameWithoutToken() {
         given()
           .contentType(ContentType.JSON)
-          .body("{}")
           .when().post("/api/game/start")
           .then()
-             .statusCode(400);
+             .statusCode(401);
     }
 
     @Test
