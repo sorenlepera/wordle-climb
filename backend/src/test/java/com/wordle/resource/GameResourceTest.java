@@ -46,7 +46,7 @@ public class GameResourceTest {
           .when().post("/api/game/start")
           .then()
              .statusCode(200)
-             .body("username", is("TESTUSER"))
+             .body("username", is("testuser"))
              .body("currentLevel", is(1))
              .body("status", is("IN_PROGRESS"));
     }
