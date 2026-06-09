@@ -308,7 +308,6 @@ export class GameSessionComponent {
       return;
     }
 
-    const key = event.key.toUpperCase();
 
     if (key === 'ENTER') {
       this.gameStateService.submitGuess();
