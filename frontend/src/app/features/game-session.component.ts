@@ -54,7 +54,7 @@ import { GameStateService } from '../core/services/game-state.service';
                 <div class="victory-emoji">🎉</div>
                 <h2>NIVEAU RÉUSSI&nbsp;!</h2>
                 <p class="victory-text">
-                  Vous avez trouvé le mot du niveau <strong>{{ gameStateService.lastLevelWord() }}</strong> !
+                  Vous avez trouvé le mot du niveau : <strong class="revealed-word">{{ gameStateService.gameState()?.targetWord || gameStateService.lastLevelWord() }}</strong>
                 </p>
                 <div class="summary-details">
                   <div class="detail-row">
