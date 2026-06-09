@@ -199,10 +199,10 @@ import { GameStateService } from '../core/services/game-state.service';
     .record-value { color: #e2e8f0; }
 
     .victory-overlay {
-      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       display: flex; justify-content: center; align-items: center;
       background: rgba(4, 4, 8, 0.65); backdrop-filter: blur(8px);
-      z-index: 100; border-radius: 20px;
+      z-index: 9999;
     }
     .victory-container, .run-over-container {
       background: rgba(10, 10, 16, 0.85); backdrop-filter: blur(24px);
