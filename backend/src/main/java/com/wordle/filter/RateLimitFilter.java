@@ -16,7 +16,7 @@ public class RateLimitFilter implements ContainerRequestFilter {
     
     // IP -> { Count, WindowStartTimestamp }
     private static final Map<String, RateLimitEntry> ipRequests = new ConcurrentHashMap<>();
-    private static final int MAX_REQUESTS_PER_HOUR = 3;
+    private static final int MAX_REQUESTS_PER_HOUR = 100;
     private static final long TIME_WINDOW_MS = 3600000; // 1 hour
 
     static class RateLimitEntry {
