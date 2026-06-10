@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
         <div class="keyboard-row">
           @for (key of row; track key) {
             <button 
-              (click)="keyClick.emit(key)"
+              (click)="onKeyClick(key)"
               [class]="getKeyClass(key)"
               [class.key-action]="key === 'ENTER' || key === 'BACKSPACE'"
             >
@@ -109,5 +109,16 @@ export class KeyboardComponent {
     if (status === 'PRESENT') return 'key-present';
     if (status === 'ABSENT') return 'key-absent';
     return 'key-normal';
+  }
+
+  onKeyClick(key: string) {
+    if (navigator && navigator.vibrate) {
+      if (key === 'ENTER' || key === 'BACKSPACE') {
+        navigator.vibrate(40);
+      } else {
+        navigator.vibrate(20);
+      }
+    }
+    this.keyClick.emit(key);
   }
 }

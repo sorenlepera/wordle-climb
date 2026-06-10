@@ -2,12 +2,13 @@ import { Component, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WordGridComponent } from '../shared/components/word-grid.component';
 import { KeyboardComponent } from '../shared/components/keyboard.component';
+import { StatsModalComponent } from '../shared/components/stats-modal.component';
 import { GameStateService } from '../core/services/game-state.service';
 
 @Component({
   selector: 'app-game-session',
   standalone: true,
-  imports: [CommonModule, WordGridComponent, KeyboardComponent],
+  imports: [CommonModule, WordGridComponent, KeyboardComponent, StatsModalComponent],
   template: `
     <div class="game-layout fade-in">
       
@@ -29,6 +30,10 @@ import { GameStateService } from '../core/services/game-state.service';
           <span class="stat-label">RECORD</span>
           <span class="stat-value record-value">{{ gameStateService.gameState()?.maxScore }} pts</span>
         </div>
+        
+        <button class="stats-btn" (click)="showStats = true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="3" width="4" height="18"></rect><rect x="10" y="8" width="4" height="13"></rect><rect x="2" y="13" width="4" height="8"></rect></svg>
+        </button>
       </aside>
 
       <!-- GAME BOARD CONTAINER -->
@@ -119,6 +124,15 @@ import { GameStateService } from '../core/services/game-state.service';
           </div>
         }
       </main>
+
+      @if (showStats) {
+        <app-stats-modal
+          [distribution]="gameStateService.guessDistribution()"
+          [currentStreak]="gameStateService.gameState()?.currentStreak || 0"
+          [maxStreak]="gameStateService.gameState()?.maxScore || 0"
+          (close)="showStats = false">
+        </app-stats-modal>
+      }
     </div>
   `,
   styles: [`
@@ -197,6 +211,23 @@ import { GameStateService } from '../core/services/game-state.service';
     .level-value { color: #00f2fe; text-shadow: 0 0 10px rgba(0, 242, 254, 0.15); }
     .streak-value { color: #f59e0b; text-shadow: 0 0 10px rgba(245, 158, 11, 0.15); }
     .record-value { color: #e2e8f0; }
+    
+    .stats-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      border-radius: 8px;
+      padding: 0.5rem;
+      cursor: pointer;
+      display: flex; justify-content: center; align-items: center;
+      transition: all 0.2s;
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+    .stats-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
 
     .victory-overlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -272,6 +303,7 @@ import { GameStateService } from '../core/services/game-state.service';
 })
 export class GameSessionComponent {
   gameStateService = inject(GameStateService);
+  showStats = false;
   
   get letterStatuses(): Record<string, 'CORRECT' | 'PRESENT' | 'ABSENT' | null> {
     const statuses: Record<string, 'CORRECT' | 'PRESENT' | 'ABSENT' | null> = {};
