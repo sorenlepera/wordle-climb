@@ -22,7 +22,9 @@ jobs:
         cache: maven
         
     - name: Run Backend Tests
-      run: ./mvnw clean test
+      run: |
+        chmod +x mvnw
+        ./mvnw clean test
       working-directory: ./backend
 
   frontend-test:
