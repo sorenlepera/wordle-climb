@@ -100,4 +100,22 @@ public class GameResourceTest {
              .body("error", is("Aucune session de niveau complété trouvée pour l'utilisateur."));
     }
 
+    @Test
+    @TestSecurity(user = "AI_ERROR_USER", roles = "user")
+    @JwtSecurity(claims = {
+        @Claim(key = "upn", value = "AI_ERROR_USER")
+    })
+    public void testAIErrorReturns500WithCleanJSON() {
+        // Simulate a complete AI failure that throws a generic RuntimeException
+        Mockito.when(wordGeneratorAIMock.generateNextWord(1, "START")).thenThrow(new RuntimeException("Groq API Timeout"));
+
+        given()
+          .contentType(ContentType.JSON)
+          .when().post("/api/game/start")
+          .then()
+             .statusCode(500)
+             .body("error", is("Une erreur interne est survenue."))
+             .body("referenceId", notNullValue());
+    }
+
 }
