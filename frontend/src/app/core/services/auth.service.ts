@@ -36,7 +36,11 @@ export class AuthService {
         this.checkToken();
       }),
       catchError(err => {
-        return throwError(() => new Error(err.error?.error || 'Erreur lors de la connexion.'));
+        let msg = err.error?.error || 'Erreur lors de la connexion.';
+        if (err.error?.details && err.error.details.length > 0) {
+          msg = err.error.details[0];
+        }
+        return throwError(() => new Error(msg));
       })
     );
   }
@@ -50,7 +54,11 @@ export class AuthService {
         }
       }),
       catchError(err => {
-        return throwError(() => new Error(err.error?.error || 'Erreur lors de la création du compte.'));
+        let msg = err.error?.error || 'Erreur lors de la création du compte.';
+        if (err.error?.details && err.error.details.length > 0) {
+          msg = err.error.details[0];
+        }
+        return throwError(() => new Error(msg));
       })
     );
   }

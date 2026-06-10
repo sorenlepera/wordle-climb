@@ -136,7 +136,21 @@ public class WordService {
         }
         
         System.err.println("🚨 All AI attempts failed.");
-        throw new RuntimeException("AI word generation failed after " + maxAttempts + " attempts.");
+        
+        // Fallback to picking a random word from the cache if AI fails (e.g. network/VPN blocking)
+        if (!cacheOfValidWords.isEmpty()) {
+            System.out.println("⚠️ Falling back to a random word from the dictionary cache.");
+            int randomIndex = new java.util.Random().nextInt(cacheOfValidWords.size());
+            int i = 0;
+            for (String word : cacheOfValidWords) {
+                if (i == randomIndex) {
+                    return word;
+                }
+                i++;
+            }
+        }
+        
+        return "POMME";
     }
 
     /**

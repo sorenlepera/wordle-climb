@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { PlayerStats } from '../core/models/game.model';
 
 @Component({
   selector: 'app-stats-modal',
@@ -14,37 +15,41 @@ import { CommonModule } from '@angular/common';
         
         <div class="stats-overview">
           <div class="stat-item">
-            <div class="stat-val">{{ totalGames }}</div>
-            <div class="stat-lbl">Joués</div>
+            <div class="stat-val">{{ stats.runsStarted }}</div>
+            <div class="stat-lbl">Lancées</div>
           </div>
           <div class="stat-item">
-            <div class="stat-val">{{ winPercentage }}%</div>
-            <div class="stat-lbl">Victoires</div>
+            <div class="stat-val">{{ stats.deaths }}</div>
+            <div class="stat-lbl">Morts</div>
           </div>
           <div class="stat-item">
-            <div class="stat-val">{{ currentStreak }}</div>
-            <div class="stat-lbl">Série Actuelle</div>
+            <div class="stat-val">{{ averageLevel | number:'1.1-1' }}</div>
+            <div class="stat-lbl">Niv. Moyen</div>
           </div>
           <div class="stat-item">
-            <div class="stat-val">{{ maxStreak }}</div>
-            <div class="stat-lbl">Série Max</div>
+            <div class="stat-val">{{ stats.maxLevel }}</div>
+            <div class="stat-lbl">Niv. Max</div>
           </div>
         </div>
 
-        <h3>RÉPARTITION DES ESSAIS</h3>
+        <h3>NIVEAU ATTEINT</h3>
         
         <div class="chart-container">
-          @for (count of distribution; track $index) {
-            <div class="chart-row">
-              <div class="row-num">{{ $index + 1 }}</div>
-              <div class="row-bar-container">
-                <div class="row-bar" 
-                     [style.width.%]="getBarWidth(count)" 
-                     [class.highlight]="count > 0 && count === maxCount">
-                  {{ count }}
+          @if (levels.length === 0) {
+            <p class="empty-chart">Aucune partie terminée pour le moment.</p>
+          } @else {
+            @for (level of levels; track level) {
+              <div class="chart-row">
+                <div class="row-num">{{ level }}</div>
+                <div class="row-bar-container">
+                  <div class="row-bar" 
+                       [style.width.%]="getBarWidth(stats.levelDistribution[level])" 
+                       [class.highlight]="stats.levelDistribution[level] > 0 && stats.levelDistribution[level] === maxCount">
+                    {{ stats.levelDistribution[level] }}
+                  </div>
                 </div>
               </div>
-            </div>
+            }
           }
         </div>
       </div>
@@ -134,32 +139,44 @@ import { CommonModule } from '@angular/common';
     .row-bar.highlight {
       background: #10b981;
     }
+    .empty-chart {
+      text-align: center; color: #64748b; font-style: italic; font-size: 0.9rem;
+    }
     .modal-slide { animation: slideUp 0.3s ease-out; }
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   `]
 })
 export class StatsModalComponent {
-  @Input() distribution: number[] = [0, 0, 0, 0, 0, 0];
-  @Input() currentStreak = 0;
-  @Input() maxStreak = 0;
+  @Input() stats: PlayerStats = {
+    runsStarted: 0,
+    deaths: 0,
+    sumOfLevels: 0,
+    maxLevel: 0,
+    levelDistribution: {}
+  };
   
   @Output() close = new EventEmitter<void>();
 
-  get totalGames() {
-    return this.distribution.reduce((acc, curr) => acc + curr, 0); // Simplified: assumes every win is a game. Real Wordle tracks losses too.
+  get averageLevel() {
+    if (this.stats.deaths === 0) return 0;
+    return this.stats.sumOfLevels / this.stats.deaths;
   }
 
-  get winPercentage() {
-    // If we only track wins, it's 100%. To make it realistic, we should track losses.
-    // For now, let's just show 100% or 0% if no games played.
-    return this.totalGames > 0 ? 100 : 0;
+  get levels(): number[] {
+    const keys = Object.keys(this.stats.levelDistribution).map(Number);
+    if (keys.length === 0) return [];
+    const max = Math.max(...keys);
+    return Array.from({length: max}, (_, i) => i + 1);
   }
 
   get maxCount() {
-    return Math.max(...this.distribution, 1); // Avoid div by 0
+    const values = Object.values(this.stats.levelDistribution);
+    if (values.length === 0) return 1;
+    return Math.max(...values, 1);
   }
 
-  getBarWidth(count: number): number {
-    return Math.max(7, (count / this.maxCount) * 100); // Min 7% width to show the number
+  getBarWidth(count: number | undefined): number {
+    if (!count) return 7;
+    return Math.max(7, (count / this.maxCount) * 100);
   }
 }

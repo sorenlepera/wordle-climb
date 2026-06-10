@@ -127,9 +127,7 @@ import { GameStateService } from '../core/services/game-state.service';
 
       @if (showStats) {
         <app-stats-modal
-          [distribution]="gameStateService.guessDistribution()"
-          [currentStreak]="gameStateService.gameState()?.currentStreak || 0"
-          [maxStreak]="gameStateService.gameState()?.maxScore || 0"
+          [stats]="gameStateService.playerStats()"
           (close)="showStats = false">
         </app-stats-modal>
       }

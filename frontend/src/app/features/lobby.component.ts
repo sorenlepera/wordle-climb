@@ -5,11 +5,12 @@ import { GameStateService } from '../core/services/game-state.service';
 import { ScorePipe } from '../shared/pipes/score.pipe';
 import { AuthService } from '../core/services/auth.service';
 import { Router } from '@angular/router';
+import { StatsModalComponent } from '../shared/components/stats-modal.component';
 
 @Component({
   selector: 'app-lobby',
   standalone: true,
-  imports: [CommonModule, FormsModule, ScorePipe],
+  imports: [CommonModule, FormsModule, ScorePipe, StatsModalComponent],
   template: `
     <div class="welcome-container fade-in">
       <div class="welcome-card">
@@ -31,13 +32,20 @@ import { Router } from '@angular/router';
               </div>
             }
             
-            <button class="btn-primary" [disabled]="isLoading" (click)="onStart()">
-              @if (isLoading) {
-                <span class="spinner"></span> CHARGEMENT...
-              } @else {
-                COMMENCER L'ASCENSION
-              }
-            </button>
+            <div class="lobby-actions">
+              <button class="btn-primary" [disabled]="isLoading" (click)="onStart()">
+                @if (isLoading) {
+                  <span class="spinner"></span> CHARGEMENT...
+                } @else {
+                  COMMENCER L'ASCENSION
+                }
+              </button>
+              
+              <button class="btn-secondary" (click)="showStats = true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="3" width="4" height="18"></rect><rect x="10" y="8" width="4" height="13"></rect><rect x="2" y="13" width="4" height="8"></rect></svg>
+                MES STATISTIQUES
+              </button>
+            </div>
           }
         </div>
       </div>
@@ -74,6 +82,13 @@ import { Router } from '@angular/router';
           }
         </div>
       </div>
+
+      @if (showStats) {
+        <app-stats-modal
+          [stats]="gameStateService.playerStats()"
+          (close)="showStats = false">
+        </app-stats-modal>
+      }
     </div>
   `,
   styles: [`
@@ -212,6 +227,25 @@ import { Router } from '@angular/router';
       box-shadow: none;
       transform: none;
     }
+    .lobby-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #cbd5e1;
+      padding: 0.95rem 2rem;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
     .leaderboard-card h2 {
       font-family: 'Space Grotesk', sans-serif;
       font-size: 1.6rem;
@@ -284,6 +318,7 @@ export class LobbyComponent {
 
   isLoading = false;
   errorMessage = '';
+  showStats = false;
 
   async onStart() {
     this.isLoading = true;

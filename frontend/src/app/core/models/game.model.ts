@@ -36,3 +36,11 @@ export interface AppStatus {
   model: string;
   cacheSize: number;
 }
+
+export interface PlayerStats {
+  runsStarted: number;
+  deaths: number;
+  sumOfLevels: number;
+  maxLevel: number;
+  levelDistribution: Record<number, number>;
+}

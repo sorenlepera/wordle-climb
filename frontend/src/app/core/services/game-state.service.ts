@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { AppStatus, GameState, LeaderboardEntry } from '../models/game.model';
+import { AppStatus, GameState, LeaderboardEntry, PlayerStats } from '../models/game.model';
 import { GameService } from './game.service';
 import { AudioService } from './audio.service';
 import confetti from 'canvas-confetti';
@@ -27,30 +27,58 @@ export class GameStateService {
   revealingRowIndex = signal<number>(-1);
   showVictory = signal<boolean>(false);
   isGuessSubmitting = signal<boolean>(false);
-  guessDistribution = signal<number[]>([0, 0, 0, 0, 0, 0]);
+  playerStats = signal<PlayerStats>({
+    runsStarted: 0,
+    deaths: 0,
+    sumOfLevels: 0,
+    maxLevel: 0,
+    levelDistribution: {}
+  });
 
   constructor() {
     this.loadStats();
   }
 
   private loadStats() {
-    const stats = localStorage.getItem('wordle_climb_stats');
+    const stats = localStorage.getItem('wordle_climb_stats_v2');
     if (stats) {
       try {
-        this.guessDistribution.set(JSON.parse(stats));
+        this.playerStats.set(JSON.parse(stats));
       } catch (e) {
         console.error('Failed to parse stats', e);
       }
     }
   }
 
-  private recordWin(guessCount: number) {
-    if (guessCount >= 1 && guessCount <= 6) {
-      const dist = [...this.guessDistribution()];
-      dist[guessCount - 1]++;
-      this.guessDistribution.set(dist);
-      localStorage.setItem('wordle_climb_stats', JSON.stringify(dist));
+  private saveStats(stats: PlayerStats) {
+    this.playerStats.set(stats);
+    localStorage.setItem('wordle_climb_stats_v2', JSON.stringify(stats));
+  }
+
+  private recordRunStart() {
+    const stats = { ...this.playerStats() };
+    stats.runsStarted++;
+    this.saveStats(stats);
+  }
+
+  private recordDeath(levelReached: number) {
+    const stats = { ...this.playerStats() };
+    stats.deaths++;
+    stats.sumOfLevels += levelReached;
+    if (levelReached > stats.maxLevel) {
+      stats.maxLevel = levelReached;
     }
+    
+    if (!stats.levelDistribution[levelReached]) {
+      stats.levelDistribution[levelReached] = 0;
+    }
+    stats.levelDistribution[levelReached]++;
+    
+    this.saveStats(stats);
+  }
+
+  private recordWin(levelReached: number) {
+    // Logic for win recording if needed in future
   }
 
   checkAiStatus() {
@@ -73,6 +101,12 @@ export class GameStateService {
       this.gameService.startGame().subscribe({
         next: (state) => {
           this.gameState.set(state);
+          
+          // Track new run start
+          if (state.currentLevel === 1 && state.guessCount === 0 && state.status === 'IN_PROGRESS') {
+            this.recordRunStart();
+          }
+
           this.currentGuess.set('');
           this.errorMessage.set('');
           this.isAiLoading.set(false);
@@ -172,7 +206,6 @@ export class GameStateService {
         this.currentGuess.set('');
 
         if (nextState.status === 'WON') {
-          this.recordWin(nextState.guessCount);
           this.showVictory.set(false);
           this.triggerLevelUpAnimation(guess);
           this.triggerConfetti();
@@ -183,6 +216,9 @@ export class GameStateService {
             this.showVictory.set(true);
             this.revealingRowIndex.set(-1);
           }, 1500);
+        } else if (nextState.status === 'LOST') {
+          this.recordDeath(nextState.currentLevel);
+          this.loadLeaderboard();
         } else {
           setTimeout(() => {
             if (this.revealingRowIndex() === submittedRowIndex) {
