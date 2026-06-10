@@ -32,6 +32,11 @@ jobs:
         chmod +x mvnw
         ./mvnw clean test
       working-directory: ./backend
+      
+    - name: Print Backend Test Logs
+      if: failure()
+      run: cat target/surefire-reports/*.txt || echo "No reports found"
+      working-directory: ./backend
 
   frontend-test:
     name: Frontend Tests (Angular)
