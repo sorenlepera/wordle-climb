@@ -11,6 +11,9 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.time.Duration;
 
 @Path("/api/auth")
@@ -19,17 +22,19 @@ import java.time.Duration;
 public class AuthResource {
 
     public static class AuthRequest {
+        @NotBlank(message = "Le pseudo est requis")
+        @Size(min = 3, max = 20, message = "Le pseudo doit contenir entre 3 et 20 caractères")
         public String username;
+
+        @NotBlank(message = "Le mot de passe est requis")
+        @Size(min = 6, max = 50, message = "Le mot de passe doit contenir entre 6 et 50 caractères")
         public String password;
     }
 
     @POST
     @Path("/register")
     @Transactional
-    public Response register(AuthRequest request) {
-        if (request.username == null || request.password == null || request.username.trim().isEmpty() || request.password.trim().isEmpty()) {
-            return Response.status(400).entity("{\"error\":\"Invalid input\"}").build();
-        }
+    public Response register(@Valid AuthRequest request) {
         String lowerUsername = request.username.trim().toLowerCase();
         if (User.findByUsername(lowerUsername) != null) {
             return Response.status(409).entity("{\"error\":\"Ce pseudo existe déjà\"}").build();
@@ -55,7 +60,7 @@ public class AuthResource {
 
     @POST
     @Path("/login")
-    public Response login(AuthRequest request) {
+    public Response login(@Valid AuthRequest request) {
         String lowerUsername = request.username.trim().toLowerCase();
         User user = User.findByUsername(lowerUsername);
         if (user == null || !BcryptUtil.matches(request.password, user.passwordHash)) {
