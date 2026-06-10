@@ -18,10 +18,10 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render welcome title', async () => {
+  it('should contain a router outlet', async () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Ascend the Wordle Tower');
+    expect(compiled.querySelector('router-outlet')).toBeTruthy();
   });
 });
