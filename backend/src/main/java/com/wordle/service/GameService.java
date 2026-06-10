@@ -4,6 +4,7 @@ import com.wordle.dto.*;
 import com.wordle.model.GameSession;
 import com.wordle.model.GameStatus;
 import com.wordle.model.PlayerProfile;
+import io.quarkus.cache.CacheResult;
 import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -141,6 +142,7 @@ public class GameService {
         return buildGameState(session, profile);
     }
 
+    @CacheResult(cacheName = "leaderboard")
     public List<LeaderboardEntry> getLeaderboard() {
         return PlayerProfile.find("order by maxScore desc")
             .page(Page.ofSize(10))

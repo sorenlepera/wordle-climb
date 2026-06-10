@@ -23,6 +23,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - wordle_network
 
@@ -42,6 +44,14 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - wordle_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: wordle_redis
+    ports:
+      - "6379:6379"
     networks:
       - wordle_network
 
