@@ -67,4 +67,37 @@ public class GameResourceTest {
           .then()
              .statusCode(200);
     }
+
+    @Test
+    @TestSecurity(user = "NO_SESSION_USER", roles = "user")
+    @JwtSecurity(claims = {
+        @Claim(key = "upn", value = "NO_SESSION_USER")
+    })
+    public void testGuessWithoutActiveSessionReturns400() {
+        // Since we haven't called /start in this test context, there's no active session.
+        // It should throw IllegalArgumentException, which our mapper turns into 400.
+        given()
+          .contentType(ContentType.JSON)
+          .body("{\"word\":\"APPLE\"}")
+          .when().post("/api/game/guess")
+          .then()
+             .statusCode(400)
+             .body("error", is("Aucune session de jeu active trouvée pour l'utilisateur. Appelez d'abord /start."));
+    }
+
+    @Test
+    @TestSecurity(user = "NO_WIN_USER", roles = "user")
+    @JwtSecurity(claims = {
+        @Claim(key = "upn", value = "NO_WIN_USER")
+    })
+    public void testNextLevelWithoutWinningReturns400() {
+        // Without winning a game first, /next-level should fail.
+        given()
+          .contentType(ContentType.JSON)
+          .when().post("/api/game/next-level")
+          .then()
+             .statusCode(400)
+             .body("error", is("Aucune session de niveau complété trouvée pour l'utilisateur."));
+    }
+
 }

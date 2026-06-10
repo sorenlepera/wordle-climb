@@ -56,13 +56,7 @@ public class GameResource {
         }
         username = username.trim().toLowerCase();
 
-        try {
-            return Response.ok(gameService.submitGuess(username, request.word().trim().toUpperCase())).build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.NOT_FOUND)
-                .entity(e.getMessage())
-                .build();
-        }
+        return Response.ok(gameService.submitGuess(username, request.word().trim().toUpperCase())).build();
     }
 
     @GET
@@ -92,13 +86,7 @@ public class GameResource {
         }
         
         username = username.trim().toLowerCase();
-        try {
-            return Response.ok(gameService.nextLevel(username)).build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.NOT_FOUND)
-                .entity(e.getMessage())
-                .build();
-        }
+        return Response.ok(gameService.nextLevel(username)).build();
     }
 }
 
