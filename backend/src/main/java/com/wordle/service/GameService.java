@@ -22,6 +22,9 @@ public class GameService {
     @Inject
     WordService wordService;
 
+    @Inject
+    ScoringService scoringService;
+
     @Transactional
     public GameStateResponse startGame(String username) {
         // 1. Fetch or create Player Profile
@@ -55,10 +58,10 @@ public class GameService {
             throw new IllegalArgumentException("Aucune session de jeu active trouvée pour l'utilisateur. Appelez d'abord /start.");
         }
 
-        if (guessWord.length() != 5) {
+        if (guessWord.length() != GameSession.REQUIRED_WORD_LENGTH) {
             return new GuessResponse(
                 false,
-                "Le mot doit comporter exactement 5 lettres",
+                "Le mot doit comporter exactement " + GameSession.REQUIRED_WORD_LENGTH + " lettres",
                 buildGameState(session, profile),
                 Collections.emptyList()
             );
@@ -78,40 +81,24 @@ public class GameService {
         List<LetterClue> evaluation = evaluateGuess(session.targetWord, guessWord);
 
         // Update guess list in session
-        if (session.guesses.isEmpty()) {
-            session.guesses = guessWord;
-        } else {
-            session.guesses = session.guesses + "," + guessWord;
-        }
-        session.guessCount++;
+        session.addGuess(guessWord);
 
-        boolean isCorrect = guessWord.equals(session.targetWord);
-
-        if (isCorrect) {
-            session.status = GameStatus.WON;
+        if (session.isCorrectGuess(guessWord)) {
+            session.markAsWon();
 
             profile.currentStreak++;
             if (session.currentLevel > profile.highScore) {
                 profile.highScore = session.currentLevel;
             }
 
-            int basePoints = switch (session.guessCount) {
-                case 1 -> 1000;
-                case 2 -> 800;
-                case 3 -> 600;
-                case 4 -> 400;
-                case 5 -> 200;
-                case 6 -> 100;
-                default -> 0;
-            };
-            int levelPoints = basePoints * session.currentLevel;
+            int levelPoints = scoringService.calculatePoints(session.guessCount, session.currentLevel);
             session.score += levelPoints;
 
             if (session.score > profile.maxScore) {
                 profile.maxScore = session.score;
             }
-        } else if (session.guessCount >= 6) {
-            session.status = GameStatus.LOST;
+        } else if (session.hasUsedAllGuesses()) {
+            session.markAsLost();
             profile.currentStreak = 0;
         }
 

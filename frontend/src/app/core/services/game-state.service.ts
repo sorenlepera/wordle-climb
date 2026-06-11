@@ -3,7 +3,8 @@ import { Router } from '@angular/router';
 import { AppStatus, GameState, LeaderboardEntry, PlayerStats } from '../models/game.model';
 import { GameService } from './game.service';
 import { AudioService } from './audio.service';
-import confetti from 'canvas-confetti';
+import { PlayerStatsService } from './player-stats.service';
+import { AnimationService } from './animation.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +13,8 @@ export class GameStateService {
   private readonly gameService = inject(GameService);
   private readonly router = inject(Router);
   private readonly audioService = inject(AudioService);
+  private readonly playerStatsService = inject(PlayerStatsService);
+  private readonly animationService = inject(AnimationService);
 
   currentGuess = signal<string>('');
   gameState = signal<GameState | null>(null);
@@ -27,58 +30,8 @@ export class GameStateService {
   revealingRowIndex = signal<number>(-1);
   showVictory = signal<boolean>(false);
   isGuessSubmitting = signal<boolean>(false);
-  playerStats = signal<PlayerStats>({
-    runsStarted: 0,
-    deaths: 0,
-    sumOfLevels: 0,
-    maxLevel: 0,
-    levelDistribution: {}
-  });
-
-  constructor() {
-    this.loadStats();
-  }
-
-  private loadStats() {
-    const stats = localStorage.getItem('wordle_climb_stats_v2');
-    if (stats) {
-      try {
-        this.playerStats.set(JSON.parse(stats));
-      } catch (e) {
-        console.error('Failed to parse stats', e);
-      }
-    }
-  }
-
-  private saveStats(stats: PlayerStats) {
-    this.playerStats.set(stats);
-    localStorage.setItem('wordle_climb_stats_v2', JSON.stringify(stats));
-  }
-
-  private recordRunStart() {
-    const stats = { ...this.playerStats() };
-    stats.runsStarted++;
-    this.saveStats(stats);
-  }
-
-  private recordDeath(levelReached: number) {
-    const stats = { ...this.playerStats() };
-    stats.deaths++;
-    stats.sumOfLevels += levelReached;
-    if (levelReached > stats.maxLevel) {
-      stats.maxLevel = levelReached;
-    }
-    
-    if (!stats.levelDistribution[levelReached]) {
-      stats.levelDistribution[levelReached] = 0;
-    }
-    stats.levelDistribution[levelReached]++;
-    
-    this.saveStats(stats);
-  }
-
-  private recordWin(levelReached: number) {
-    // Logic for win recording if needed in future
+  get playerStats() {
+    return this.playerStatsService.playerStats;
   }
 
   checkAiStatus() {
@@ -104,7 +57,7 @@ export class GameStateService {
           
           // Track new run start
           if (state.currentLevel === 1 && state.guessCount === 0 && state.status === 'IN_PROGRESS') {
-            this.recordRunStart();
+            this.playerStatsService.recordRunStart();
           }
 
           this.currentGuess.set('');
@@ -211,7 +164,7 @@ export class GameStateService {
         if (nextState.status === 'WON') {
           this.showVictory.set(false);
           this.triggerLevelUpAnimation(guess);
-          this.triggerConfetti();
+          this.animationService.triggerConfetti();
           setTimeout(() => {
             this.audioService.playWinSound();
           }, 800);
@@ -220,7 +173,7 @@ export class GameStateService {
             this.revealingRowIndex.set(-1);
           }, 1500);
         } else if (nextState.status === 'LOST') {
-          this.recordDeath(nextState.currentLevel);
+          this.playerStatsService.recordDeath(nextState.currentLevel);
           this.loadLeaderboard();
         } else {
           setTimeout(() => {
@@ -269,32 +222,5 @@ export class GameStateService {
     if (state) {
       this.enterGame();
     }
-  }
-
-  triggerConfetti() {
-    const duration = 3000;
-    const end = Date.now() + duration;
-
-    const frame = () => {
-      confetti({
-        particleCount: 5,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0 },
-        colors: ['#00f2fe', '#4facfe', '#10b981', '#f59e0b', '#e2e8f0']
-      });
-      confetti({
-        particleCount: 5,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1 },
-        colors: ['#00f2fe', '#4facfe', '#10b981', '#f59e0b', '#e2e8f0']
-      });
-
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
-      }
-    };
-    frame();
   }
 }
