@@ -118,7 +118,8 @@ export class GameStateService {
         error: (err) => {
           console.error('Failed to start game', err);
           this.isAiLoading.set(false);
-          reject(err);
+          const msg = err.error?.message || "Une erreur de connexion est survenue.";
+          reject(new Error(msg));
         }
       });
     });
@@ -151,6 +152,8 @@ export class GameStateService {
       error: (err) => {
         console.error('Failed to advance level', err);
         this.isAiLoading.set(false);
+        const msg = err.error?.message || "Impossible de passer au niveau suivant.";
+        this.triggerErrorShake(msg);
       }
     });
   }

@@ -326,9 +326,9 @@ export class LobbyComponent {
     
     try {
       await this.gameStateService.enterGame();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erreur au lancement du jeu', err);
-      this.errorMessage = "Une erreur est survenue lors de la connexion au serveur. Veuillez réessayer.";
+      this.errorMessage = err.message || "Une erreur est survenue lors de la connexion au serveur. Veuillez réessayer.";
     } finally {
       this.isLoading = false;
     }

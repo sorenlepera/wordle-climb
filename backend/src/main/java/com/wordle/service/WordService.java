@@ -9,6 +9,7 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import java.text.Normalizer;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,7 +40,7 @@ public class WordService {
 
                 // 2. If the database lacks the full dictionary, load from file and append
                 // missing words
-                if (persistedWords.size() < 1000) {
+                if (persistedWords.size() < 4000) {
                     System.out.println(
                             "📥 Database is missing the full dictionary. Loading from local dictionary.txt...");
                     java.io.InputStream is = getClass().getResourceAsStream("/dictionary.txt");
@@ -137,20 +138,7 @@ public class WordService {
         
         System.err.println("🚨 All AI attempts failed.");
         
-        // Fallback to picking a random word from the cache if AI fails (e.g. network/VPN blocking)
-        if (!cacheOfValidWords.isEmpty()) {
-            System.out.println("⚠️ Falling back to a random word from the dictionary cache.");
-            int randomIndex = new java.util.Random().nextInt(cacheOfValidWords.size());
-            int i = 0;
-            for (String word : cacheOfValidWords) {
-                if (i == randomIndex) {
-                    return word;
-                }
-                i++;
-            }
-        }
-        
-        return "POMME";
+        throw new RuntimeException("Impossible de générer le mot cible via l'IA. Veuillez vérifier votre connexion (ou désactiver votre VPN) et réessayer.");
     }
 
     /**

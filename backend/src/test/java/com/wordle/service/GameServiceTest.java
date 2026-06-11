@@ -25,6 +25,9 @@ class GameServiceTest {
     @Inject
     CacheManager cacheManager;
 
+    @Inject
+    WordService wordService;
+
     @InjectMock
     WordGeneratorAI wordGeneratorAIMock;
 
@@ -138,14 +141,13 @@ class GameServiceTest {
     @Transactional
     void testSubmitValidGuessUpdatesState() {
         String testUser = "guess_test_user";
-        Mockito.when(wordGeneratorAIMock.generateNextWord(1, "START")).thenReturn("APPLE");
+        Mockito.when(wordGeneratorAIMock.generateNextWord(1, "START")).thenReturn("POMME");
         
         // Ensure word is in WordService cache (which tests against its dictionary.txt)
-        // Since we are mocking AI, let's just make sure APPLE is an acceptable dictionary word in test
-        // By relying on WordService's real initialization, APPLE is probably in the dictionary.
+        wordService.addToCache("TABLE");
         
         gameService.startGame(testUser);
-        GuessResponse response = gameService.submitGuess(testUser, "PLANT");
+        GuessResponse response = gameService.submitGuess(testUser, "TABLE");
         
         assertTrue(response.validWord());
         assertEquals(1, response.gameState().guessCount());
@@ -183,7 +185,7 @@ class GameServiceTest {
         });
         
         // Assert the exception message matches our WordService failure
-        assertTrue(exception.getMessage().contains("AI word generation failed after"));
+        assertTrue(exception.getMessage().contains("Impossible de générer le mot cible via l'IA"));
         
         // Strictly verify that the AI was queried exactly 3 times before giving up!
         Mockito.verify(wordGeneratorAIMock, Mockito.times(3))

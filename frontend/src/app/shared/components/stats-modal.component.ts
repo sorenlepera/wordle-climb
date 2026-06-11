@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PlayerStats } from '../core/models/game.model';
+import { PlayerStats } from '../../core/models/game.model';
 
 @Component({
   selector: 'app-stats-modal',
@@ -170,7 +170,7 @@ export class StatsModalComponent {
   }
 
   get maxCount() {
-    const values = Object.values(this.stats.levelDistribution);
+    const values = Object.values(this.stats.levelDistribution) as number[];
     if (values.length === 0) return 1;
     return Math.max(...values, 1);
   }
